@@ -20,7 +20,7 @@ jobs:
 
       - name: Clone ChildRepo (RepoB)
         env:
-          CHILD_REPO_SECRET: ${{ secrets.REPOB_REPO_SECRET }}
+          REPOB_REPO_SECRET: ${{ secrets.REPOB_REPO_SECRET }}
         run: |
           git clone https://x-access-token:${REPOB_REPO_SECRET}@github.com/kvivekkannan/RepoB.git repob
           cd repob

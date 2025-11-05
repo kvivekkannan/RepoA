@@ -1,4 +1,4 @@
-name: Sync RepoA to RepoB
+name: Mirror RepoA to RepoB
 
 on:
   push:
@@ -6,35 +6,40 @@ on:
       - main
 
 jobs:
-  sync:
+  mirror:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Parent Repo (RepoA)
-        uses: actions/checkout@v4 
+      - name: Checkout RepoA (source)
+        uses: actions/checkout@v4
 
-      - name: Configure Git for Parent Repo
+      - name: Configure Git
         run: |
           git config user.name "kvivekkannan"
           git config user.email "kviveknishanth@gmail.com"
 
-      - name: Clone ChildRepo (RepoB)
+      - name: Clone RepoB (destination)
         env:
           REPOB_REPO_SECRET: ${{ secrets.REPOB_REPO_SECRET }}
         run: |
           git clone https://x-access-token:${REPOB_REPO_SECRET}@github.com/kvivekkannan/RepoB.git repob
           cd repob
-          git checkout sync || git checkout -b sync
+          git checkout main || git checkout -b main
           git config user.name "kvivekkannan"
           git config user.email "kviveknishanth@gmail.com"
 
-      - name: Sync files to ChildRepo
+      - name: Mirror files (RepoA → RepoB)
         run: |
-          rsync -av --delete --exclude '.git' ./ ./repob/
+          rsync -av --delete \
+            --exclude '.git' \
+            --exclude '.github/workflows' \
+            --exclude 'README.md' \
+            --exclude 'docs/' \
+            ./ ./repob/
 
-      - name: Commit and Push Changes
+      - name: Commit and Push changes
         working-directory: ./repob
         run: |
           git add .
-          git commit -m "🔄 Sync changes from RepoA on $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-          git push origin sync
+          git commit -m "🔄 Full mirror from RepoA on $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push origin main
